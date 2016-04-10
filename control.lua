@@ -3,17 +3,11 @@ require "defines"
 
 function init()
     global.version = "0.0.1"
+    global.trainStations = global.trainStations or game.get_surface(1).find_entities_filtered{area = {{-10000,-10000}, {10000,10000}}, name="train-stop"} or {}
 end
 
 script.on_init(init)
---script.on_load(function()
---    if #game.players > 0 then
---        for _, player in ipairs(game.players) do
---            
---        end
---    end
---    shuttleTrainGUI = GUI.add()
---end)
+
 
 script.on_event(defines.events.on_player_driving_changed_state, function(event) 
     local player = game.players[event.player_index]
@@ -31,6 +25,16 @@ script.on_event(defines.events.on_gui_click, function(event)
     local player = game.players[event.player_index]
     if(player.gui.left.shuttleTrain==nil)then return end
     if(event.element.parent == player.gui.left.shuttleTrain)then
+
+        for key, station in pairs(global.trainStations)do
+            if(event.element.name == station.backer_name)then
+                if(player.vehicle ~= nil and player.vehicle.name == "shuttleTrain") then
+                    local schedule = {current=1, records={[1]={time_to_wait=30,station=event.element.name}} }
+                    player.vehicle.train.schedule= schedule
+                    player.vehicle.train.manual_mode = false
+                end
+            end
+        end
         --TODO: Debug remove
         if(event.element == player.gui.left.shuttleTrain.bStop1)then
             player.print("Stop 1 button pressed")
@@ -52,14 +56,44 @@ script.on_event(defines.events.on_gui_click, function(event)
     end
 end)
 
+entityBuilt = function(event)
+    local entity = event.created_entity
+    if(entity.type=="train-stop")then
+        table.insert(global.trainStations, entity)
+    end
+end
+
+script.on_event(defines.events.on_built_entity, entityBuilt)
+script.on_event(defines.events.on_robot_built_entity, entityBuilt)
+
+entityDestroyed = function(event)
+    local entity = event.entity
+    if(entity.type=="train-stop" and global.trainStations ~= nil)then
+        for key, value in pairs(global.trainStations)do
+            if(entity.backer_name==value.backer_name)then
+                table.remove(global.trainStations, key)
+            end
+        end
+    end
+end
+
+script.on_event(defines.events.on_entity_died, entityDestroyed)
+script.on_event(defines.events.on_preplayer_mined_item, entityDestroyed)
+script.on_event(defines.events.on_robot_pre_mined, entityDestroyed)
+
 createGui = function(player)
     if player.gui.left.shuttleTrain ~= nil then return end
     player.gui.left.add{type="frame", name="shuttleTrain", direction="vertical" }
     player.gui.left.shuttleTrain.add{type="label", name="label", caption="Shuttle Train" }
 
 
-    --FOR TESTING TODO: REMOVE THIS
-    player.gui.left.shuttleTrain.add{type="button", name="bStop1", caption="Stop 1" }
-    player.gui.left.shuttleTrain.add{type="button", name="bStop2", caption="Stop 2"}
+    if(global.trainStations~=nil)then
+        for key, station in pairs(global.trainStations)do
+            player.gui.left.shuttleTrain.add{type="button", name=station.backer_name, caption=station.backer_name}
+        end
+    end
+end
+
+findAllStations = function()
 
 end
