@@ -3,6 +3,7 @@ data:extend({
         type = "technology",
         name = "shuttleTrain_tech",
         icon = "__ShuttleTrain__/graphics/icon_shuttleTrain_tech.png",
+        icon_size = 128,
         effects = 
         {
             {
