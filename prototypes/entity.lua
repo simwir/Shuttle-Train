@@ -114,14 +114,14 @@ data:extend({
       direction_count = 256,
       filenames =
       {
-        "__base__/graphics/entity/diesel-locomotive/diesel-locomotive-01.png",
-        "__base__/graphics/entity/diesel-locomotive/diesel-locomotive-02.png",
-        "__base__/graphics/entity/diesel-locomotive/diesel-locomotive-03.png",
-        "__base__/graphics/entity/diesel-locomotive/diesel-locomotive-04.png",
-        "__base__/graphics/entity/diesel-locomotive/diesel-locomotive-05.png",
-        "__base__/graphics/entity/diesel-locomotive/diesel-locomotive-06.png",
-        "__base__/graphics/entity/diesel-locomotive/diesel-locomotive-07.png",
-        "__base__/graphics/entity/diesel-locomotive/diesel-locomotive-08.png"
+        "__ShuttleTrain__/graphics/shuttle-train/shuttle-train-01.png",
+        "__ShuttleTrain__/graphics/shuttle-train/shuttle-train-02.png",
+        "__ShuttleTrain__/graphics/shuttle-train/shuttle-train-03.png",
+        "__ShuttleTrain__/graphics/shuttle-train/shuttle-train-04.png",
+        "__ShuttleTrain__/graphics/shuttle-train/shuttle-train-05.png",
+        "__ShuttleTrain__/graphics/shuttle-train/shuttle-train-06.png",
+        "__ShuttleTrain__/graphics/shuttle-train/shuttle-train-07.png",
+        "__ShuttleTrain__/graphics/shuttle-train/shuttle-train-08.png"
       },
       line_length = 4,
       lines_per_file = 8,
