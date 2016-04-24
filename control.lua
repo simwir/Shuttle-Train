@@ -37,6 +37,7 @@ function on_tick(event)
 			if player.gui.left.shuttleTrain then
 				count = count + 1
 				if global.filters[player_id] ~= player.gui.left.shuttleTrain.filter.filter_txfield.text or global.filters.meta_data.force_update then
+					global.filters.meta_data.force_update = false
 					currentPage = 1
 					global.filters[player_id] = player.gui.left.shuttleTrain.filter.filter_txfield.text or ""
 					global.filtered_stations[player_id] = {}
