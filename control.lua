@@ -4,9 +4,13 @@ require "defines"
 function init()
 	global.version = "0.0.1"
 	global.trainStations = global.trainStations or game.get_surface(1).find_entities_filtered{area = {{-10000,-10000}, {10000,10000}}, name="train-stop"} or {}
+	global.filters = global.filters or {}
+	global.filters.meta_data = {force_update = false}
+	global.filtered_stations = global.filtered_stations or {}
 end
 
 script.on_init(init)
+script.on_load(init)
 currentPage = 1
 stations = {}
 
@@ -15,12 +19,43 @@ script.on_event(defines.events.on_player_driving_changed_state, function(event)
 	if (player.vehicle ~= nil and player.vehicle.name == "shuttleTrain") then
 		if (player.gui.left.shuttleTrain == nil) then
 			createGui(player)
+			script.on_event(defines.events.on_tick, function(event) on_tick(event) end) -- register update function
+			global.filters.meta_data.force_update = true
+			on_tick(event) -- force an update of the GUI
 		end
 	end
 	if (player.vehicle == nil and player.gui.left.shuttleTrain ~= nil) then
 		player.gui.left.shuttleTrain.destroy()
 	end
 end)
+
+
+function on_tick(event)
+	if event.tick % 60 == 0 then -- every second
+		local count = 0
+		for player_id,player in ipairs(game.players) do
+			if player.gui.left.shuttleTrain then
+				count = count + 1
+				if global.filters[player_id] ~= player.gui.left.shuttleTrain.filter.filter_txfield.text or global.filters.meta_data.force_update then
+					currentPage = 1
+					global.filters[player_id] = player.gui.left.shuttleTrain.filter.filter_txfield.text or ""
+					global.filtered_stations[player_id] = {}
+					local names = {}
+					for _,station in ipairs(global.trainStations) do
+						if string.find(string.upper(station.backer_name), string.upper(global.filters[player_id])) and not names[station.backer_name] then -- case-insensitive
+							names[station.backer_name] = true -- allows to keep track of which station has already been added
+							table.insert(global.filtered_stations[player_id], station)
+						end
+					end
+					table.sort(global.filtered_stations[player_id], function (a, b) return a.backer_name < b.backer_name end)
+					updateStationsGUI(player, currentPage)
+				end
+			end
+		end
+		if count == 0 then script.on_event(defines.events.on_tick, nil) end -- if no-one has the GUI open we remove the event handler
+	end
+end
+
 
 script.on_event(defines.events.on_gui_click, function(event)
 	local player = game.players[event.player_index]
@@ -29,16 +64,16 @@ script.on_event(defines.events.on_gui_click, function(event)
 	end
 
 	if (event.element.name == "nextPage") then
-		if (currentPage < math.floor(#stations / 10) + 1) then
+		if (currentPage < math.floor((#global.filtered_stations[player.index] -1) / 10) + 1) then 
 			currentPage = currentPage + 1
-			addStations(player, currentPage)
+			updateStationsGUI(player, currentPage)
 		end
 	end
 
 	if (event.element.name == "prevPage") then
 		if (currentPage > 1) then
 			currentPage = currentPage -1
-			addStations(player, currentPage)
+			updateStationsGUI(player, currentPage)
 		end
 	end
 
@@ -62,6 +97,9 @@ entityBuilt = function(event)
 	local entity = event.created_entity
 	if (entity.type == "train-stop") then
 		table.insert(global.trainStations, entity)
+
+		global.filters.meta_data.force_update = true
+		on_tick(event) -- force an update of the GUI (in case someone is in the GUI)
 	end
 end
 
@@ -74,6 +112,8 @@ entityDestroyed = function(event)
 		for key, value in pairs(global.trainStations) do
 			if (entity == value) then
 				table.remove(global.trainStations, key)
+				global.filters.meta_data.force_update = true
+				on_tick(event) -- force an update of the GUI (in case someone is in the GUI)
 			end
 		end
 	end
@@ -88,22 +128,74 @@ createGui = function(player)
 	player.gui.left.add{type = "frame", name = "shuttleTrain", direction = "vertical"}
 	player.gui.left.shuttleTrain.add{type = "flow", name = "title", direction = "horizontal"}
 	player.gui.left.shuttleTrain.title.add{type = "label", name = "label", caption = "Shuttle Train", style = "st_label_title"}
+	player.gui.left.shuttleTrain.add{type = "flow", name = "filter", direction = "horizontal"}
+	player.gui.left.shuttleTrain.filter.add{type = "label", name = "filter_lbl", caption = "Filter:", style = "st_label_simple_text"}
+	player.gui.left.shuttleTrain.filter.add{type = "textfield", name = "filter_txfield", style = "st_textfield"}
 	player.gui.left.shuttleTrain.add{type = "flow", name = "header", direction = "horizontal"}
-	player.gui.left.shuttleTrain.header.add{type = "button", name = "prevPage", caption = "<", style = "st-nav-button"}
-	player.gui.left.shuttleTrain.header.add{type = "button", name = "pageNumber", caption = "1", style = "st-nav-button"}
-	player.gui.left.shuttleTrain.header.add{type = "button", name = "nextPage", caption = ">", style = "st-nav-button"}
-	--player.gui.left.shuttleTrain.add{type="flow", name="flow", direction="vertical" }
+	player.gui.left.shuttleTrain.header.add{type = "button", name = "prevPage", caption = "<", style = "st-nav-button-arrow"}
+	player.gui.left.shuttleTrain.header.add{type = "button", name = "pageNumber", caption = "1", style = "st-nav-button-pagination"}
+	player.gui.left.shuttleTrain.header.add{type = "button", name = "nextPage", caption = ">", style = "st-nav-button-arrow"}
+
+	player.gui.left.shuttleTrain.add{type="flow", name="flow", direction="vertical" }
+	player.gui.left.shuttleTrain.flow.add{type = "label", name = "loading", caption = "Loading Stations", style = "st_label_title"}
+
 
 	currentPage = 1
 	prevStations = {}
 
-	indexStations(player)
-	addStations(player, 1)
+	if global.filters[player.index] then -- retrieve filter from data
+		player.gui.left.shuttleTrain.filter.filter_txfield.text = global.filters[player.index]
+		global.filters.meta_data.force_update = true
+	end
+
+	--indexStations(player)
+	--addStations(player, 1)
 
 end
 
 nextPage = function(player)
 
+end
+
+
+function updateStationsGUI(player, page)
+	local stationsAdded = 0
+	
+	if (page == 1) then
+		player.gui.left.shuttleTrain.header.prevPage.style = "st-nav-button-arrow-disabled"
+	else
+		player.gui.left.shuttleTrain.header.prevPage.style = "st-nav-button-arrow"
+	end
+
+	
+	if (page == math.floor((#global.filtered_stations[player.index] -1) / 10) + 1 or math.floor((#global.filtered_stations[player.index] -1) / 10) + 1 == 0) then
+		player.gui.left.shuttleTrain.header.nextPage.style = "st-nav-button-arrow-disabled"
+	else
+		player.gui.left.shuttleTrain.header.nextPage.style = "st-nav-button-arrow"
+	end
+
+	if(player.gui.left.shuttleTrain.flow ~= nil) then
+		player.gui.left.shuttleTrain.flow.destroy()
+	end
+
+	player.gui.left.shuttleTrain.add{type = "flow", name = "flow", direction = "vertical"}
+
+	if #global.filtered_stations[player.index] == 0 then -- when no station match the search
+		player.gui.left.shuttleTrain.flow.add{type = "label", name = "loading", caption = "No station found", style = "st_label_title"}
+		player.gui.left.shuttleTrain.header.pageNumber.caption = "-/-"
+	else
+		player.gui.left.shuttleTrain.header.pageNumber.caption = page .. "/" .. math.floor((#global.filtered_stations[player.index] -1) / 10) + 1
+	end
+
+
+	if (global.filtered_stations[player.index] ~= nil or #global.filtered_stations[player.index] ~= 0) then
+		local startIndex = (page -1) * 10 + 1
+		while stationsAdded < 10 and global.filtered_stations[player.index][startIndex + stationsAdded] ~= nil do
+			local name = global.filtered_stations[player.index][startIndex + stationsAdded].backer_name
+			player.gui.left.shuttleTrain.flow.add{type = "button", name = name, caption = name, style = "st-station-button"}
+			stationsAdded = stationsAdded + 1
+		end
+	end
 end
 
 indexStations = function(player)
