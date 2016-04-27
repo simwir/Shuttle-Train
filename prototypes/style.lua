@@ -15,6 +15,45 @@ data:extend(
 	}
 )
 
+data.raw["gui-style"].default["st_top_image_button_style"] = {
+    type = "button_style",
+    parent = "button_style",
+    width = 34,
+    height = 34,
+    default_graphical_set = {
+        type="monolith",
+        monolith_image = {
+            filename = "__ShuttleTrain__/graphics/icon_shuttleTrain.png",
+            width = 32,
+            height = 32
+        }
+    },
+    hovered_graphical_set = {
+        type="monolith",
+        monolith_image = {
+            filename = "__ShuttleTrain__/graphics/icon_shuttleTrain.png",
+            width = 32,
+            height = 32
+        }
+    },
+    clicked_graphical_set = {
+        type="monolith",
+        monolith_image = {
+            filename = "__ShuttleTrain__/graphics/icon_shuttleTrain.png",
+            width = 32,
+            height = 32
+        }
+    },
+    disabled_graphical_set = {
+        type="monolith",
+        monolith_image = {
+            filename = "__ShuttleTrain__/graphics/icon_shuttleTrain.png",
+            width = 32,
+            height = 32
+        }
+    }
+}
+
 data.raw["gui-style"].default["st_label_title"] =
 {
 	type = "label_style",
