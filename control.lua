@@ -2,26 +2,41 @@ require "util"
 require "defines"
 
 function init()
-	global.version = "0.0.1"
-	global.trainStations = global.trainStations or game.get_surface(1).find_entities_filtered{area = {{-10000,-10000}, {10000,10000}}, name="train-stop"} or {}
-	global.filters = global.filters or {}
-	global.filters.meta_data = {force_update = false}
-	global.filtered_stations = global.filtered_stations or {}
+	global.trainStations = global.trainStations or game.get_surface(1).find_entities_filtered{area = {{-10000,-10000}, {10000,10000}}, type="train-stop"} or {}
+	global.shuttleTrains = global.shuttleTrains or game.get_surface(1).find_entities_filtered{area = {{-10000,-10000}, {10000,10000}}, name="shuttleTrain"} or {}
+    load()
+end
+
+function load()
+    global.version = "0.0.1"
+    global.filters = global.filters or {}
+    global.filters.meta_data = {force_update = false }
+    global.filtered_stations = global.filtered_stations or {}
+    global.trainStations = global.trainStations or {}
+    global.shuttleTrains = global.shuttleTrains or {}
 end
 
 script.on_init(init)
-script.on_load(init)
+script.on_load(load)
 currentPage = 1
 stations = {}
+
+script.on_configuration_changed(function()
+    init()
+    for player_id, player in ipairs(game.players)do
+        addPlayerGui(player)
+    end
+end)
+
+script.on_event(defines.events.on_player_created, function(event)
+    addPlayerGui(game.players[event.player_index])
+end)
 
 script.on_event(defines.events.on_player_driving_changed_state, function(event) 
 	local player = game.players[event.player_index]
 	if (player.vehicle ~= nil and player.vehicle.name == "shuttleTrain") then
 		if (player.gui.left.shuttleTrain == nil) then
-			createGui(player)
-			script.on_event(defines.events.on_tick, function(event) on_tick(event) end) -- register update function
-			global.filters.meta_data.force_update = true
-			on_tick(event) -- force an update of the GUI
+			createGui(player, event)
 		end
 	end
 	if (player.vehicle == nil and player.gui.left.shuttleTrain ~= nil) then
@@ -29,6 +44,12 @@ script.on_event(defines.events.on_player_driving_changed_state, function(event)
 	end
 end)
 
+function addPlayerGui(player)
+    if (player.vehicle == nil or player.vehicle ~= nil and player.vehicle.name ~= "shuttleTrain") and player.gui.top.shuttleTop == nil then
+        player.gui.top.add{type="frame", name="shuttleFrame", direction = "vertical"}
+        player.gui.top.shuttleFrame.add{type="button", name="shuttleTop", style="st_top_image_button_style" }
+    end
+end
 
 function on_tick(event)
 	if event.tick % 60 == 0 then -- every second
@@ -60,6 +81,15 @@ end
 
 script.on_event(defines.events.on_gui_click, function(event)
 	local player = game.players[event.player_index]
+
+    if event.element.name == "shuttleTop" then
+        if player.gui.left.shuttleTrain == nil then
+            createGui(player, event)
+        else
+            player.gui.left.shuttleTrain.destroy()
+        end
+    end
+
 	if (player.gui.left.shuttleTrain == nil) then
 		return
 	end
@@ -78,18 +108,37 @@ script.on_event(defines.events.on_gui_click, function(event)
 		end
 	end
 
-	--if(event.element.parent == player.gui.left.shuttleTrain)then
-
 	if (event.element.parent == player.gui.left.shuttleTrain.flow) then
 
 		for key, station in pairs(global.trainStations) do
 			if (event.element.name == station.backer_name) then
+                local schedule = {current = 1, records = {[1] = {time_to_wait = 30, station = event.element.name}}}
 				if(player.vehicle ~= nil and player.vehicle.name == "shuttleTrain") then
-					local schedule = {current = 1, records = {[1] = {time_to_wait = 30, station = event.element.name}}}
 					player.vehicle.train.schedule= schedule
 					player.vehicle.train.manual_mode = false
-				end
-			end
+				elseif global.shuttleTrains ~= nil or global.shuttleTrains ~= {} then
+                    if global.shuttleTrains[1] == nil then
+                        global.shuttleTrains = game.get_surface(1).find_entities_filtered{area = {{-10000,-10000}, {10000,10000}}, name="shuttleTrain"}
+                    end
+                    local closestTrain
+                    local distanceToClosestTrain = 99999999999999999999999999
+                    for key, train in ipairs(global.shuttleTrains)do
+                        local distance = util.distance(train.position, player.position)
+                        if distance < distanceToClosestTrain then
+                            if train.train.state == defines.trainstate.no_schedule or train.train.state == defines.trainstate.no_path or train.train.state == defines.trainstate.wait_station or train.train.state == defines.trainstate.manual_control then
+                                closestTrain = train
+                                distanceToClosestTrain = distance
+                            end
+                        end
+                    end
+                    if closestTrain == nil then
+                        player.print("No unused shuttle train found")
+                    else
+                        closestTrain.train.schedule = schedule
+                        closestTrain.train.manual_mode = false
+                    end
+                end
+            end
 		end
 	end
 end)
@@ -101,6 +150,9 @@ entityBuilt = function(event)
 
 		global.filters.meta_data.force_update = true
 		on_tick(event) -- force an update of the GUI (in case someone is in the GUI)
+
+    elseif entity.name == "shuttleTrain" then
+        table.insert(global.shuttleTrains, entity)
 	end
 end
 
@@ -116,7 +168,13 @@ entityDestroyed = function(event)
 				global.filters.meta_data.force_update = true
 				on_tick(event) -- force an update of the GUI (in case someone is in the GUI)
 			end
-		end
+        end
+    elseif entity.name == "shuttleTrain" and global.shuttleTrains ~= nil then
+        for key, value in ipairs(global.shuttleTrains) do
+            if entity == value then
+                table.remove(global.shuttleTrains, key)
+            end
+        end
 	end
 end
 
@@ -124,8 +182,11 @@ script.on_event(defines.events.on_entity_died, entityDestroyed)
 script.on_event(defines.events.on_preplayer_mined_item, entityDestroyed)
 script.on_event(defines.events.on_robot_pre_mined, entityDestroyed)
 
-createGui = function(player)
+createGui = function(player, event)
 	if player.gui.left.shuttleTrain ~= nil then return end
+    script.on_event(defines.events.on_tick, function(event) on_tick(event) end) -- register update function
+    global.filters.meta_data.force_update = true
+    on_tick(event) -- force an update of the GUI
 	player.gui.left.add{type = "frame", name = "shuttleTrain", direction = "vertical"}
 	player.gui.left.shuttleTrain.add{type = "flow", name = "title", direction = "horizontal"}
 	player.gui.left.shuttleTrain.title.add{type = "label", name = "label", caption = "Shuttle Train", style = "st_label_title"}
@@ -293,4 +354,10 @@ end
 
 findAllStations = function()
 
+end
+
+function sendMessageToAllPlayers(message)
+    for _,player in ipairs(game.players)do
+        player.print(message)
+    end
 end
