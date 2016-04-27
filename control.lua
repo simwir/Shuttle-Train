@@ -284,6 +284,11 @@ indexStations = function(player)
 			end
 
 		end
+		local function compare(a,b)
+			return a.backer_name < b.backer_name
+		end
+
+		table.sort(stations, compare)
 
 	end
 	--player.print(table.tostring(stations))
