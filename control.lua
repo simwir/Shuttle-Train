@@ -8,7 +8,7 @@ function init()
 end
 
 function load()
-    global.version = "0.0.1"
+    global.version = "1.0.0"
     global.filters = global.filters or {}
     global.filters.meta_data = {force_update = false }
     global.filtered_stations = global.filtered_stations or {}
@@ -134,6 +134,7 @@ script.on_event(defines.events.on_gui_click, function(event)
                     if closestTrain == nil then
                         player.print("No unused shuttle train found")
                     else
+                        player.print("Train sent from " .. distanceToClosestTrain .. " away")
                         closestTrain.train.schedule = schedule
                         closestTrain.train.manual_mode = false
                     end
