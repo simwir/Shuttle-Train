@@ -45,7 +45,7 @@ script.on_event(defines.events.on_player_driving_changed_state, function(event)
 end)
 
 function addPlayerGui(player)
-    if (player.vehicle == nil or player.vehicle ~= nil and player.vehicle.name ~= "shuttleTrain") and player.gui.top.shuttleTop == nil then
+    if (player.vehicle == nil or player.vehicle ~= nil and player.vehicle.name ~= "shuttleTrain") and player.gui.top.shuttleFrame == nil then
         player.gui.top.add{type="frame", name="shuttleFrame", direction = "vertical"}
         player.gui.top.shuttleFrame.add{type="button", name="shuttleTop", style="st_top_image_button_style" }
     end
