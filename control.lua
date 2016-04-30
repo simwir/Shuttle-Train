@@ -123,7 +123,7 @@ script.on_event(defines.events.on_gui_click, function(event)
                     local closestTrain
                     local distanceToClosestTrain = 99999999999999999999999999
                     for key, train in ipairs(global.shuttleTrains)do
-                        local distance = util.distance(train.position, player.position)
+                        local distance = util.distance(train.position, station.position)
                         if distance < distanceToClosestTrain then
                             if train.train.state == defines.trainstate.no_schedule or train.train.state == defines.trainstate.no_path or train.train.state == defines.trainstate.wait_station or train.train.state == defines.trainstate.manual_control then
                                 closestTrain = train
@@ -134,7 +134,7 @@ script.on_event(defines.events.on_gui_click, function(event)
                     if closestTrain == nil then
                         player.print("No unused shuttle train found")
                     else
-                        player.print("Train sent from " .. distanceToClosestTrain .. " away")
+                        player.print(string.format("sent shuttle %q to station %q from %um away", closestTrain.backer_name, station.backer_name, distanceToClosestTrain))
                         closestTrain.train.schedule = schedule
                         closestTrain.train.manual_mode = false
                     end
