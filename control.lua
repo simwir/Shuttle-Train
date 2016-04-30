@@ -134,10 +134,11 @@ script.on_event(defines.events.on_gui_click, function(event)
                     if closestTrain == nil then
                         player.print("No unused shuttle train found")
                     else
-                        player.print(string.format("sent shuttle %q to station %q from %um away", closestTrain.backer_name, station.backer_name, distanceToClosestTrain))
+                        player.print(string.format("Sent shuttle %q to station %q from %um away", closestTrain.backer_name, station.backer_name, distanceToClosestTrain))
                         closestTrain.train.schedule = schedule
                         closestTrain.train.manual_mode = false
                     end
+                    break;
                 end
             end
 		end
