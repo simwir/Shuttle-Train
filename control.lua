@@ -45,7 +45,7 @@ script.on_event(defines.events.on_player_driving_changed_state, function(event)
 end)
 
 function addPlayerGui(player)
-    if (player.vehicle == nil or player.vehicle ~= nil and player.vehicle.name ~= "shuttleTrain") and player.gui.top.shuttleTop == nil then
+    if (player.vehicle == nil or player.vehicle ~= nil and player.vehicle.name ~= "shuttleTrain") and player.gui.top.shuttleFrame == nil then
         player.gui.top.add{type="frame", name="shuttleFrame", direction = "vertical"}
         player.gui.top.shuttleFrame.add{type="button", name="shuttleTop", style="st_top_image_button_style" }
     end
@@ -64,7 +64,7 @@ function on_tick(event)
 					global.filtered_stations[player_id] = {}
 					local names = {}
 					for _,station in ipairs(global.trainStations) do
-						if string.find(string.upper(station.backer_name), string.upper(global.filters[player_id])) and not names[station.backer_name] then -- case-insensitive
+						if string.find(string.upper(station.backer_name), string.upper(global.filters[player_id]), 1, true) and not names[station.backer_name] then -- case-insensitive
 							names[station.backer_name] = true -- allows to keep track of which station has already been added
 							table.insert(global.filtered_stations[player_id], station)
 						end
@@ -123,7 +123,7 @@ script.on_event(defines.events.on_gui_click, function(event)
                     local closestTrain
                     local distanceToClosestTrain = 99999999999999999999999999
                     for key, train in ipairs(global.shuttleTrains)do
-                        local distance = util.distance(train.position, player.position)
+                        local distance = util.distance(train.position, station.position)
                         if distance < distanceToClosestTrain then
                             if train.train.state == defines.trainstate.no_schedule or train.train.state == defines.trainstate.no_path or train.train.state == defines.trainstate.wait_station or train.train.state == defines.trainstate.manual_control then
                                 closestTrain = train
@@ -134,10 +134,11 @@ script.on_event(defines.events.on_gui_click, function(event)
                     if closestTrain == nil then
                         player.print("No unused shuttle train found")
                     else
-                        player.print("Train sent from " .. distanceToClosestTrain .. " away")
+                        player.print(string.format("Sent shuttle %q to station %q from %um away", closestTrain.backer_name, station.backer_name, distanceToClosestTrain))
                         closestTrain.train.schedule = schedule
                         closestTrain.train.manual_mode = false
                     end
+                    break;
                 end
             end
 		end
