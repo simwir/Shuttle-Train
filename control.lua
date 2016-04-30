@@ -64,7 +64,7 @@ function on_tick(event)
 					global.filtered_stations[player_id] = {}
 					local names = {}
 					for _,station in ipairs(global.trainStations) do
-						if string.find(string.upper(station.backer_name), string.upper(global.filters[player_id])) and not names[station.backer_name] then -- case-insensitive
+						if string.find(string.upper(station.backer_name), string.upper(global.filters[player_id]), 1, true) and not names[station.backer_name] then -- case-insensitive
 							names[station.backer_name] = true -- allows to keep track of which station has already been added
 							table.insert(global.filtered_stations[player_id], station)
 						end
