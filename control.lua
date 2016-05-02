@@ -18,7 +18,7 @@ end
 
 script.on_init(init)
 script.on_load(load)
-currentPage = 1
+    global.current_page = global.current_page or {}
 stations = {}
 
 script.on_configuration_changed(function()
@@ -59,7 +59,6 @@ function on_tick(event)
 				count = count + 1
 				if global.filters[player_id] ~= player.gui.left.shuttleTrain.filter.filter_txfield.text or global.filters.meta_data.force_update then
 					global.filters.meta_data.force_update = false
-					currentPage = 1
 					global.filters[player_id] = player.gui.left.shuttleTrain.filter.filter_txfield.text or ""
 					global.filtered_stations[player_id] = {}
 					local names = {}
@@ -68,10 +67,11 @@ function on_tick(event)
 							names[station.backer_name] = true -- allows to keep track of which station has already been added
 							table.insert(global.filtered_stations[player_id], station)
 						end
+                global.current_page[player_id] = 1
 					end
 					table.sort(global.filtered_stations[player_id], function (a, b) return a.backer_name < b.backer_name end)
-					updateStationsGUI(player, currentPage)
 				end
+				updateStationsGUI(player)
 			end
 		end
 		if count == 0 then script.on_event(defines.events.on_tick, nil) end -- if no-one has the GUI open we remove the event handler
@@ -95,16 +95,16 @@ script.on_event(defines.events.on_gui_click, function(event)
 	end
 
 	if (event.element.name == "nextPage") then
-		if (currentPage < math.floor((#global.filtered_stations[player.index] -1) / 10) + 1) then 
-			currentPage = currentPage + 1
-			updateStationsGUI(player, currentPage)
+		if (global.current_page[player.index] < math.floor((#global.filtered_stations[player.index] -1) / 10) + 1) then 
+			global.current_page[player.index] = global.current_page[player.index] + 1
+			updateStationsGUI(player)
 		end
 	end
 
 	if (event.element.name == "prevPage") then
-		if (currentPage > 1) then
-			currentPage = currentPage -1
-			updateStationsGUI(player, currentPage)
+		if (global.current_page[player.index] > 1) then
+			global.current_page[player.index] = global.current_page[player.index] -1
+			updateStationsGUI(player)
 		end
 	end
 
@@ -204,9 +204,7 @@ createGui = function(player, event)
 	player.gui.left.shuttleTrain.flow.add{type = "label", name = "loading", caption = "Loading Stations", style = "st_label_title"}
 
 
-	currentPage = 1
-	prevStations = {}
-
+	global.current_page[player.index] = 1
 	if global.filters[player.index] then -- retrieve filter from data
 		player.gui.left.shuttleTrain.filter.filter_txfield.text = global.filters[player.index]
 		global.filters.meta_data.force_update = true
@@ -225,14 +223,14 @@ end
 function updateStationsGUI(player, page)
 	local stationsAdded = 0
 	
-	if (page == 1) then
+	if (global.current_page[player.index] == 1) then
 		player.gui.left.shuttleTrain.header.prevPage.style = "st-nav-button-arrow-disabled"
 	else
 		player.gui.left.shuttleTrain.header.prevPage.style = "st-nav-button-arrow"
 	end
 
 	
-	if (page == math.floor((#global.filtered_stations[player.index] -1) / 10) + 1 or math.floor((#global.filtered_stations[player.index] -1) / 10) + 1 == 0) then
+	if (global.current_page[player.index] == math.floor((#global.filtered_stations[player.index] -1) / 10) + 1 or math.floor((#global.filtered_stations[player.index] -1) / 10) + 1 == 0) then
 		player.gui.left.shuttleTrain.header.nextPage.style = "st-nav-button-arrow-disabled"
 	else
 		player.gui.left.shuttleTrain.header.nextPage.style = "st-nav-button-arrow"
@@ -248,12 +246,13 @@ function updateStationsGUI(player, page)
 		player.gui.left.shuttleTrain.flow.add{type = "label", name = "loading", caption = "No station found", style = "st_label_title"}
 		player.gui.left.shuttleTrain.header.pageNumber.caption = "-/-"
 	else
-		player.gui.left.shuttleTrain.header.pageNumber.caption = page .. "/" .. math.floor((#global.filtered_stations[player.index] -1) / 10) + 1
+		player.gui.left.shuttleTrain.header.pageNumber.caption = global.current_page[player.index] .. "/" .. math.floor((#global.filtered_stations[player.index] -1) / 10) + 1
 	end
 
 
 	if (global.filtered_stations[player.index] ~= nil or #global.filtered_stations[player.index] ~= 0) then
-		local startIndex = (page -1) * 10 + 1
+		local stationsAdded = 0
+		local startIndex = (global.current_page[player.index] -1) * 10 + 1
 		while stationsAdded < 10 and global.filtered_stations[player.index][startIndex + stationsAdded] ~= nil do
 			local name = global.filtered_stations[player.index][startIndex + stationsAdded].backer_name
 			player.gui.left.shuttleTrain.flow.add{type = "button", name = name, caption = name, style = "st-station-button"}
