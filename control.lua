@@ -10,6 +10,7 @@ end
 function load()
     global.version = "1.0.1"
     global.filters = global.filters or {}
+    global.current_page = global.current_page or {}
     global.filters.meta_data = {force_update = false }
     global.filtered_stations = global.filtered_stations or {}
     global.trainStations = global.trainStations or {}
