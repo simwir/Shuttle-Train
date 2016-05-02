@@ -16,20 +16,24 @@ function load()
     global.trainStations = global.trainStations or {}
     global.shuttleTrains = global.shuttleTrains or {}
     global.force_shuttle_call_GUI_update = true;
-    script.on_event(defines.events.on_tick, function(event) on_tick(event) end) -- register update function
 end
 
 script.on_init(init)
 script.on_load(load)
 
 
+script.on_event(defines.events.on_tick, function(event) on_tick(event) end) -- register update function
+
 script.on_event(defines.events.on_player_created, function(event)
     UpdateShuttleCallButton(game.players[event.player_index])
 end)
 
 script.on_event(defines.events.on_research_finished, function(event)
-    for _, player in ipairs(event.research.force.players) do
-        UpdateShuttleCallButton(player)
+    if event.research.name == "shuttleTrain_tech" then
+        for _, player in pairs(event.research.force.players) do
+            global.force_shuttle_call_GUI_update = true;
+        end
+    return
     end
 end)
 
@@ -47,12 +51,13 @@ end)
 
 function UpdateShuttleCallButton(player)
     if player.force.technologies["shuttleTrain_tech"].researched then
-    	if not player.gui.top.shuttle_call_button then
-        	player.gui.top.add{type="button", name="shuttle_call_button", style="st_top_image_button_style" }
+    	if not player.gui.top.shuttle_call_Frame then
+            player.gui.top.add{type="frame", name="shuttle_call_Frame", direction = "vertical"}
+            player.gui.top.shuttle_call_Frame.add{type="button", name="shuttle_call_button", style="st_top_image_button_style" }
         end
     else
-    	if player.gui.top.shuttle_call_button then
-    		player.gui.top.shuttle_call_button.destroy()
+    	if player.gui.top.shuttle_call_Frame then
+    		player.gui.top.shuttle_call_Frame.destroy()
     	end
     end
 end
@@ -67,13 +72,6 @@ function on_tick(event)
     end
 	if (event.tick % 60 == 0) then -- every second or when the function is called without arg
         update_GUI_with_filter()
-        local count = 0
-        for player_id,player in ipairs(game.players) do
-            if player.gui.left.shuttleTrain then
-                count = count + 1
-            end
-        end
-        if count == 0 then script.on_event(defines.events.on_tick, nil) end -- if no-one has the GUI open we remove the event handler
     end
 end
 
@@ -222,7 +220,6 @@ function createGUI(player)
 	player.gui.left.shuttleTrain.add{type="flow", name="flow", direction="vertical" }
 	player.gui.left.shuttleTrain.flow.add{type = "label", name = "loading", caption = "Loading Stations", style = "st_label_title"}
 
-    script.on_event(defines.events.on_tick, function(event) on_tick(event) end) -- register update function
     global.filters.meta_data.force_update = true
     update_GUI_with_filter() -- force an update of the GUI
 
