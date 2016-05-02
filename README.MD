@@ -16,6 +16,5 @@ Enjoy the ride!!!
 
 Known bugs
 ----------
-Calling a Shuttle to a station that shares names to another station will send a shuttle to each station.
 
 

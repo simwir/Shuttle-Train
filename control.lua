@@ -8,7 +8,7 @@ function init()
 end
 
 function load()
-    global.version = "1.0.0"
+    global.version = "1.0.1"
     global.filters = global.filters or {}
     global.filters.meta_data = {force_update = false }
     global.filtered_stations = global.filtered_stations or {}

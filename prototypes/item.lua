@@ -6,6 +6,6 @@ data:extend({
         flags = {"goes-to-quickbar"},
         subgroup = "transport",
         place_result = "shuttleTrain",
-        stack_size = 1,
+        stack_size = 5,
     }
 })
