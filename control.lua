@@ -21,8 +21,6 @@ end
 
 script.on_init(init)
 script.on_load(load)
-    global.current_page = global.current_page or {}
-stations = {}
 
 
 script.on_event(defines.events.on_player_created, function(event)
