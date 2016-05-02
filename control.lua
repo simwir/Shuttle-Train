@@ -15,6 +15,8 @@ function load()
     global.filtered_stations = global.filtered_stations or {}
     global.trainStations = global.trainStations or {}
     global.shuttleTrains = global.shuttleTrains or {}
+    global.force_shuttle_call_GUI_update = true;
+    script.on_event(defines.events.on_tick, function(event) on_tick(event) end) -- register update function
 end
 
 script.on_init(init)
@@ -22,15 +24,15 @@ script.on_load(load)
     global.current_page = global.current_page or {}
 stations = {}
 
-script.on_configuration_changed(function()
-    init()
-    for player_id, player in ipairs(game.players)do
-        addPlayerGui(player)
-    end
-end)
 
 script.on_event(defines.events.on_player_created, function(event)
-    addPlayerGui(game.players[event.player_index])
+    UpdateShuttleCallButton(game.players[event.player_index])
+end)
+
+script.on_event(defines.events.on_research_finished, function(event)
+    for _, player in ipairs(event.research.force.players) do
+        UpdateShuttleCallButton(player)
+    end
 end)
 
 script.on_event(defines.events.on_player_driving_changed_state, function(event) 
@@ -45,10 +47,15 @@ script.on_event(defines.events.on_player_driving_changed_state, function(event)
 	end
 end)
 
-function addPlayerGui(player)
-    if (player.vehicle == nil or player.vehicle ~= nil and player.vehicle.name ~= "shuttleTrain") and player.gui.top.shuttleFrame == nil then
-        player.gui.top.add{type="frame", name="shuttleFrame", direction = "vertical"}
-        player.gui.top.shuttleFrame.add{type="button", name="shuttleTop", style="st_top_image_button_style" }
+function UpdateShuttleCallButton(player)
+    if player.force.technologies["shuttleTrain_tech"].researched then
+    	if not player.gui.top.shuttle_call_button then
+        	player.gui.top.add{type="button", name="shuttle_call_button", style="st_top_image_button_style" }
+        end
+    else
+    	if player.gui.top.shuttle_call_button then
+    		player.gui.top.shuttle_call_button.destroy()
+    	end
     end
 end
 
@@ -68,6 +75,13 @@ function on_tick(event)
 							names[station.backer_name] = true -- allows to keep track of which station has already been added
 							table.insert(global.filtered_stations[player_id], station)
 						end
+    if global.force_shuttle_call_GUI_update then
+        for _, player in ipairs(game.players) do
+            if player.gui.top.shuttleFrame then player.gui.top.shuttleFrame.destroy() end
+            UpdateShuttleCallButton(player)
+        end
+        global.force_shuttle_call_GUI_update = nil
+    end
                 global.current_page[player_id] = 1
 					end
 					table.sort(global.filtered_stations[player_id], function (a, b) return a.backer_name < b.backer_name end)
