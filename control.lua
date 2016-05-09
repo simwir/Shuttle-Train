@@ -49,6 +49,12 @@ script.on_event(defines.events.on_player_driving_changed_state, function(event)
 	end
 end)
 
+script.on_event(defines.events.on_train_changed_state, function(event)
+    if event.train.locomotives["front_movers"][1].name == "shuttleTrain" and event.train.state == defines.trainstate.wait_station and #event.train.schedule.records == 1 then
+        event.train.manual_mode = true
+    end
+end)
+
 function UpdateShuttleCallButton(player)
     if player.force.technologies["shuttleTrain_tech"].researched then
     	if not player.gui.top.shuttle_call_Frame then
@@ -269,4 +275,11 @@ function updateStationsGUI(player)
 			stationsAdded = stationsAdded + 1
 		end
 	end
+end
+
+--For debugging
+function sendMessageToAllPlayers(message)
+    for _,player in ipairs(game.players)do
+            player.print(message)
+    end
 end
