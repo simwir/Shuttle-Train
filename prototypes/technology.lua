@@ -21,6 +21,7 @@ data:extend({
             {"science-pack-2", 1},
           },
           time = 20
-        }
+        },
+        order = "c-g-b-a"
     },
 })
