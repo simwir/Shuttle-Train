@@ -1,5 +1,5 @@
 require "util"
-require "defines"
+--require "defines"
 
 function init()
 	global.trainStations = global.trainStations or game.get_surface(1).find_entities_filtered{area = {{-10000,-10000}, {10000,10000}}, type="train-stop"} or {}
@@ -50,7 +50,7 @@ script.on_event(defines.events.on_player_driving_changed_state, function(event)
 end)
 
 script.on_event(defines.events.on_train_changed_state, function(event)
-    if event.train.locomotives["front_movers"][1].name == "shuttleTrain" and event.train.state == defines.trainstate.wait_station and #event.train.schedule.records == 1 then
+    if event.train.locomotives["front_movers"][1].name == "shuttleTrain" and event.train.state == defines.train_state.wait_station and #event.train.schedule.records == 1 then
         event.train.manual_mode = true
     end
 end)
@@ -151,7 +151,7 @@ script.on_event(defines.events.on_gui_click, function(event)
                     for key, train in ipairs(global.shuttleTrains)do
                         local distance = util.distance(train.position, station.position)
                         if distance < distanceToClosestTrain then
-                            if train.train.state == defines.trainstate.no_schedule or train.train.state == defines.trainstate.no_path or train.train.state == defines.trainstate.wait_station or train.train.state == defines.trainstate.manual_control then
+                            if train.train.state == defines.train_state.no_schedule or train.train.state == defines.train_state.no_path or train.train.state == defines.train_state.wait_station or train.train.state == defines.train_state.manual_control then
                                 closestTrain = train
                                 distanceToClosestTrain = distance
                             end
