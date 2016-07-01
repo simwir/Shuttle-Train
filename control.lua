@@ -127,7 +127,6 @@ script.on_event(defines.events.on_gui_click, function(event)
 	end
 
 	if (event.element.name == "prevPage") then
-		sendMessageToAllPlayers("prevPage")
 		if (global.current_page[player.index] > 1) then
 			global.current_page[player.index] = global.current_page[player.index] -1
 			updateStationsGUI(player)
