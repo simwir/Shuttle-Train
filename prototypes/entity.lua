@@ -15,6 +15,7 @@ data:extend({
         weight = 2000,
         max_speed = 1.2,
         max_power = "600kW",
+        reversing_power_modifier = 0.6,
         braking_force = 10,
         friction_force = 0.50,
         -- this is a percentage of current speed that will be subtracted
