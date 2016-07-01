@@ -1,14 +1,13 @@
 require "util"
-require "defines"
 
 function init()
-	global.trainStations = global.trainStations or game.get_surface(1).find_entities_filtered{area = {{-10000,-10000}, {10000,10000}}, type="train-stop"} or {}
-	global.shuttleTrains = global.shuttleTrains or game.get_surface(1).find_entities_filtered{area = {{-10000,-10000}, {10000,10000}}, name="shuttleTrain"} or {}
+	global.trainStations = global.trainStations or game.surfaces[1].find_entities_filtered{area = {{-10000,-10000}, {10000,10000}}, type="train-stop"} or {}
+	global.shuttleTrains = global.shuttleTrains or game.surfaces[1].find_entities_filtered{area = {{-10000,-10000}, {10000,10000}}, name="shuttleTrain"} or {}
     load()
 end
 
 function load()
-    global.version = "1.0.1"
+    global.version = "1.1.0"
     global.filters = global.filters or {}
     global.current_page = global.current_page or {}
     global.filters.meta_data = {force_update = false }
@@ -50,7 +49,7 @@ script.on_event(defines.events.on_player_driving_changed_state, function(event)
 end)
 
 script.on_event(defines.events.on_train_changed_state, function(event)
-    if event.train.locomotives["front_movers"][1].name == "shuttleTrain" and event.train.state == defines.trainstate.wait_station and #event.train.schedule.records == 1 then
+    if event.train.locomotives["front_movers"][1].name == "shuttleTrain" and event.train.state == defines.train_state.wait_station and #event.train.schedule.records == 1 then
         event.train.manual_mode = true
     end
 end)
@@ -70,7 +69,7 @@ end
 
 function on_tick(event)
     if global.force_shuttle_call_GUI_update then
-        for _, player in ipairs(game.players) do
+        for _, player in pairs(game.players) do
             if player.gui.top.shuttleFrame then player.gui.top.shuttleFrame.destroy() end
             UpdateShuttleCallButton(player)
         end
@@ -83,14 +82,14 @@ end
 
 
 function update_GUI_with_filter()
-	for player_id,player in ipairs(game.players) do
+	for player_id,player in pairs(game.players) do
 		if player.gui.left.shuttleTrain then
 			if global.filters[player_id] ~= player.gui.left.shuttleTrain.filter.filter_txfield.text or global.filters.meta_data.force_update then
                 global.current_page[player_id] = 1
 				global.filters[player_id] = player.gui.left.shuttleTrain.filter.filter_txfield.text or ""
 				global.filtered_stations[player_id] = {}
 				local names = {}
-				for _,station in ipairs(global.trainStations) do
+				for _,station in pairs(global.trainStations) do
 					if string.find(string.upper(station.backer_name), string.upper(global.filters[player_id]), 1, true) and not names[station.backer_name] then -- case-insensitive
 						names[station.backer_name] = true -- allows to keep track of which station has already been added
 						table.insert(global.filtered_stations[player_id], station)
@@ -114,7 +113,7 @@ script.on_event(defines.events.on_gui_click, function(event)
         else
             player.gui.left.shuttleTrain.destroy()
         end
-    end
+	end
 
 	if (player.gui.left.shuttleTrain == nil) then
 		return
@@ -144,14 +143,14 @@ script.on_event(defines.events.on_gui_click, function(event)
 					player.vehicle.train.manual_mode = false
 				elseif global.shuttleTrains ~= nil or global.shuttleTrains ~= {} then
                     if global.shuttleTrains[1] == nil then
-                        global.shuttleTrains = game.get_surface(1).find_entities_filtered{area = {{-10000,-10000}, {10000,10000}}, name="shuttleTrain"}
+                        global.shuttleTrains = game.surfaces[1].find_entities_filtered{area = {{-10000,-10000}, {10000,10000}}, name="shuttleTrain"}
                     end
                     local closestTrain
                     local distanceToClosestTrain = 99999999999999999999999999
-                    for key, train in ipairs(global.shuttleTrains)do
+                    for key, train in pairs(global.shuttleTrains)do
                         local distance = util.distance(train.position, station.position)
                         if distance < distanceToClosestTrain then
-                            if train.train.state == defines.trainstate.no_schedule or train.train.state == defines.trainstate.no_path or train.train.state == defines.trainstate.wait_station or train.train.state == defines.trainstate.manual_control then
+                            if train.train.state == defines.train_state.no_schedule or train.train.state == defines.train_state.no_path or train.train.state == defines.train_state.wait_station or train.train.state == defines.train_state.manual_control then
                                 closestTrain = train
                                 distanceToClosestTrain = distance
                             end
@@ -197,7 +196,7 @@ function entityDestroyed (event)
 			end
         end
     elseif entity.name == "shuttleTrain" and global.shuttleTrains ~= nil then
-        for key, value in ipairs(global.shuttleTrains) do
+        for key, value in pairs(global.shuttleTrains) do
             if entity == value then
                 table.remove(global.shuttleTrains, key)
             end
@@ -277,9 +276,9 @@ function updateStationsGUI(player)
 	end
 end
 
---For debugging
+--#######   DEBUG   #######
 function sendMessageToAllPlayers(message)
-    for _,player in ipairs(game.players)do
-            player.print(message)
-    end
+	for _,player in pairs(game.players)do
+		player.print(message)
+	end
 end

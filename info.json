@@ -1,6 +1,7 @@
 {
   "name": "ShuttleTrain",
   "version": "0.0.1",
+  "factorio_version": "0.13",
   "title": "Shuttle Train",
   "author": "Simwir",
   "contact": "contact@simwir.dk",
