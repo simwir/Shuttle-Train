@@ -18,7 +18,7 @@ function load()
 end
 
 script.on_init(init)
-script.on_load(load)
+script.on_configuration_changed(load)
 
 
 script.on_event(defines.events.on_tick, function(event) on_tick(event) end) -- register update function
