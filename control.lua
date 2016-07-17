@@ -18,7 +18,7 @@ function load()
 end
 
 script.on_init(init)
-script.on_load(load)
+script.on_configuration_changed(load)
 
 
 script.on_event(defines.events.on_tick, function(event) on_tick(event) end) -- register update function
@@ -75,7 +75,7 @@ function on_tick(event)
         end
         global.force_shuttle_call_GUI_update = nil
     end
-	if (event.tick % 60 == 0) then -- every second or when the function is called without arg
+	if event == null or (event.tick % 60 == 0) then -- every second or when the function is called without arg
         update_GUI_with_filter()
     end
 end
@@ -90,7 +90,9 @@ function update_GUI_with_filter()
 				global.filtered_stations[player_id] = {}
 				local names = {}
 				for _,station in pairs(global.trainStations) do
-					if string.find(string.upper(station.backer_name), string.upper(global.filters[player_id]), 1, true) and not names[station.backer_name] then -- case-insensitive
+					if (station.valid == false) then
+						removeTrainStopFromArray(station)
+					elseif string.find(string.upper(station.backer_name), string.upper(global.filters[player_id]), 1, true) and not names[station.backer_name] then -- case-insensitive
 						names[station.backer_name] = true -- allows to keep track of which station has already been added
 						table.insert(global.filtered_stations[player_id], station)
 					end
@@ -136,7 +138,9 @@ script.on_event(defines.events.on_gui_click, function(event)
 	if (event.element.parent == player.gui.left.shuttleTrain.flow) then
 
 		for key, station in pairs(global.trainStations) do
-			if (event.element.name == station.backer_name) then
+			if (station.valid == false) then
+				removeTrainStopFromArray(station)
+			elseif (event.element.name == station.backer_name) then
                 local schedule = {current = 1, records = {[1] = {time_to_wait = 30, station = event.element.name}}}
 				if(player.vehicle ~= nil and player.vehicle.name == "shuttleTrain") then
 					player.vehicle.train.schedule= schedule
@@ -188,19 +192,23 @@ script.on_event({defines.events.on_built_entity, defines.events.on_robot_built_e
 function entityDestroyed (event)
 	local entity = event.entity
 	if (entity.type == "train-stop" and global.trainStations ~= nil) then
-		for key, value in pairs(global.trainStations) do
-			if (entity == value) then
-				table.remove(global.trainStations, key)
-				global.filters.meta_data.force_update = true
-				on_tick(event) -- force an update of the GUI (in case someone is in the GUI)
-			end
-        end
+		removeTrainStopFromArray(entity)
     elseif entity.name == "shuttleTrain" and global.shuttleTrains ~= nil then
         for key, value in pairs(global.shuttleTrains) do
             if entity == value then
                 table.remove(global.shuttleTrains, key)
             end
         end
+	end
+end
+
+function removeTrainStopFromArray(entity)
+	for key, station in pairs(global.trainStations) do
+		if entity == station then
+			table.remove(global.trainStations, key)
+			global.filters.meta_data.force_update = true
+			on_tick() -- force an update of the GUI (in case someone is in the GUI)
+		end
 	end
 end
 
