@@ -7,7 +7,7 @@ function init()
 end
 
 function load()
-    global.version = "1.1.1"
+    global.version = "1.1.2"
     global.filters = global.filters or {}
     global.current_page = global.current_page or {}
     global.filters.meta_data = {force_update = false }
