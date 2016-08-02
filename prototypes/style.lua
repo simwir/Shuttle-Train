@@ -15,11 +15,23 @@ data:extend(
 	}
 )
 
+data.raw["gui-style"].default["st_top_button_frame_style"] =
+{
+type = "frame_style",
+	parent = "frame_style",
+	width = 33,
+	height = 33,
+	left_padding = 0,
+	right_padding = 0,
+	top_padding = 0,
+	bottom_padding = 0,
+}
+
 data.raw["gui-style"].default["st_top_image_button_style"] = {
     type = "button_style",
     parent = "button_style",
-    width = 34,
-    height = 34,
+    width = 33,
+    height = 33,
     default_graphical_set = {
         type="monolith",
         monolith_image = {

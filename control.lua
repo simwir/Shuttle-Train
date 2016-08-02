@@ -57,7 +57,7 @@ end)
 function UpdateShuttleCallButton(player)
     if player.force.technologies["shuttleTrain_tech"].researched then
     	if not player.gui.top.shuttle_call_Frame then
-            player.gui.top.add{type="frame", name="shuttle_call_Frame", direction = "vertical"}
+            player.gui.top.add{type="frame", name="shuttle_call_Frame", direction = "vertical", style="st_top_button_frame_style"}
             player.gui.top.shuttle_call_Frame.add{type="button", name="shuttle_call_button", style="st_top_image_button_style" }
         end
     else
