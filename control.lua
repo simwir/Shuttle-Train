@@ -140,8 +140,8 @@ script.on_event(defines.events.on_gui_click, function(event)
 		for key, station in pairs(global.trainStations) do
 			if (station.valid == false) then
 				removeTrainStopFromArray(station)
-			elseif (event.element.name == station.backer_name) then
-                local schedule = {current = 1, records = {[1] = {time_to_wait = 30, station = event.element.name}}}
+			elseif (event.element.caption == station.backer_name) then
+                local schedule = {current = 1, records = {[1] = {time_to_wait = 30, station = event.element.caption}}}
 				if(player.vehicle ~= nil and player.vehicle.name == "shuttleTrain") then
 					player.vehicle.train.schedule= schedule
 					player.vehicle.train.manual_mode = false
@@ -278,7 +278,7 @@ function updateStationsGUI(player)
 		local startIndex = (global.current_page[player.index] -1) * 10 + 1
 		while stationsAdded < 10 and global.filtered_stations[player.index][startIndex + stationsAdded] ~= nil do
 			local name = global.filtered_stations[player.index][startIndex + stationsAdded].backer_name
-			player.gui.left.shuttleTrain.flow.add{type = "button", name = name, caption = name, style = "st-station-button"}
+			player.gui.left.shuttleTrain.flow.add{type = "button", name = stationsAdded+1, caption = name, style = "st-station-button"}
 			stationsAdded = stationsAdded + 1
 		end
 	end
