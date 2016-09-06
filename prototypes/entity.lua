@@ -18,6 +18,7 @@ data:extend({
         reversing_power_modifier = 0.6,
         braking_force = 10,
         friction_force = 0.50,
+		vertical_selection_shift = -0.5,
         -- this is a percentage of current speed that will be subtracted
         air_resistance = 0.0075,
         connection_distance = 3,
